@@ -1,0 +1,8 @@
+RewriteEngine On    # mod_rewriteが有効な場合のみ以下の処理を行う
+
+# リクエストURLに対応するファイルはない
+RewriteCond %{REQUEST_FILENAME} !-f
+# リクエストURLに対応するディレクトリはない 
+RewriteCond %{REQUEST_FILENAME} !-d
+
+RewriteRule ^ index.php [QSA,L]  # すべての処理をindex.phpに移管 QSA:クエリパラメータを維持, L: URL書き換え処理終了
