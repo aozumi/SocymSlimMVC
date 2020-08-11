@@ -116,5 +116,33 @@ class MemberController
         $response->getBody()->write($content);
         return $response;
     }
+
+    public function getAllMembersJSON(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        $sqlSelect = 'SELECT * FROM members';
+
+        try {
+            $db = $this->db();
+            $stmt = $db->prepare($sqlSelect);
+            $result = $stmt->execute();
+            if ($result) {
+                $jsonArray = [
+                    'members' => $stmt->fetchAll(),
+                    'msg' => 'データ取得に成功しました'
+                ];
+            } else {
+                $jsonArray = ['msg' => 'データ取得に失敗しました'];
+            }
+        } catch (PDOException $ex) {
+            $jsonArray = ['msg' => '障害が発生しました'];
+            var_dump($ex);
+        } finally {
+            $db = null;
+        }
+
+        $response->getBody()->write(\json_encode($jsonArray));
+        $response = $response->withHeader('Content-Type', 'application/json');
+        return $response;
+    }
 }
 
