@@ -73,16 +73,6 @@ class MemberController
         return $response;
     }
 
-    private function rowToMember($row): Member {
-        $member = new Member();
-        $member->setId($row['id']);
-        $member->setMbNameLast($row['mb_name_last']);
-        $member->setMbNameFirst($row['mb_name_first']);
-        $member->setMbBirth($row['mb_birth']);
-        $member->setMbType($row['mb_type']);
-        return $member;
-    }
-
     public function showMemberDetail(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
         $templateParams = [];  // テンプレートに渡すパラメータ
