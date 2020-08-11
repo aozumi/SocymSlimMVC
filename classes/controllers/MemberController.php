@@ -149,23 +149,13 @@ class MemberController
 
     public function showMembersList(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
-        $sqlSelect = 'SELECT * FROM members ORDER BY id';
         $templateParams = [];
         $membersList = [];
 
         try {
             $db = $this->db();
-            $stmt = $db->prepare($sqlSelect);
-            $result = $stmt->execute();
-
-            if ($result) {
-                while ($row = $stmt->fetch()) {
-                    $member = $this->rowToMember($row);
-                    $membersList[$member->getId()] = $member;
-                }
-            } else {
-                $templateParams['msg'] = 'データ取得に失敗しました';
-            }
+            $dao = new MemberDAO($db);
+            $membersList = $dao->findAll();
         } catch (PDOException $ex) {
             $templateParams['msg'] = '障害が発生しました';
         } finally {

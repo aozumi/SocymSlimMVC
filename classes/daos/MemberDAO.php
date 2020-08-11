@@ -37,4 +37,21 @@ class MemberDAO
             return null;
         }
     }
+
+    public function findAll(): array
+    {
+        $sqlSelect = 'SELECT * FROM members ORDER BY id';
+        $membersList = [];
+
+        $stmt = $this->db->prepare($sqlSelect);
+        $result = $stmt->execute();
+
+        if ($result) {
+            while ($row = $stmt->fetch()) {
+                $member = $this->rowToMember($row);
+                $membersList[$member->getId()] = $member;
+            }
+        }
+        return $membersList; 
+    }
 }
