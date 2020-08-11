@@ -6,5 +6,6 @@ require_once($TOPDIR . '/vendor/autoload.php');
 require_once($TOPDIR . '/config.php');
 require_once($TOPDIR . '/containerSetups.php');
 $app = AppFactory::create();
+require_once($TOPDIR . '/bootstrap.php');
 require_once($TOPDIR . '/routes.php');
 $app->run();
