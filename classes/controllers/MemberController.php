@@ -8,6 +8,8 @@ use Slim\Views\Twig;
 use PDO;
 use PDOException;
 
+use SocymSlim\MVC\entities\Member;
+
 class MemberController
 {
     private $container;
@@ -82,6 +84,7 @@ class MemberController
 
     public function showMemberDetail(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
+        $templateParams = [];  // テンプレートに渡すパラメータ
         $memberId = $args['id'];
         $sqlSelect = 'SELECT * FROM members WHERE id = :id';
 
@@ -92,28 +95,27 @@ class MemberController
             $result = $stmt->execute();
             if ($result) { // SELECT成功
                 if ($row = $stmt->fetch()) {
-                    $id = $row['id'];
-                    $mbNameLast = $row['mb_name_last'];
-                    $mbNameFirst = $row['mb_name_first'];
-                    $mbBirth = $row['mb_birth'];
-                    $mbType = $row['mb_type'];
-
-                    $content = 'ID: ' . $id . '<br>氏名: ' . \htmlspecialchars($mbNameLast) . \htmlspecialchars($mbNameFirst) . 
-                        '<br>生年月日: ' . $mbBirth . '<br>会員種別: ' . $mbType;
+                    $member = new Member();
+                    $member->setId($row['id']);
+                    $member->setMbNameLast($row['mb_name_last']);
+                    $member->setMbNameFirst($row['mb_name_first']);
+                    $member->setMbBirth($row['mb_birth']);
+                    $member->setMbType($row['mb_type']);
+                    $templateParams['memberInfo'] = $member;
                 } else {
-                    $content = '指定された会員情報は存在しません';
+                    $templateParams['msg'] = '指定された会員情報は存在しません';
                 }
             } else {
-                $content = 'データ取得に失敗しました';
+                $templateParams['msg'] = 'データ取得に失敗しました';
             }
         } catch (PDOException $ex) {
-            $content = '障害が発生しました。';
+            $templateParams['msg'] = '障害が発生しました。';
             var_dump($ex);
         } finally {
             $db = null; // DB切断
         }
 
-        $response->getBody()->write($content);
+        $response = $this->twig()->render($response, 'memberDetail.html', $templateParams);
         return $response;
     }
 
