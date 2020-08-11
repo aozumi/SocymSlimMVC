@@ -6,6 +6,7 @@ use Psr\Container\ContainerInterface;
 use Slim\Interfaces\ErrorRendererInterface;
 use Slim\Views\Twig;
 use Slim\Error\Renderers\HtmlErrorRenderer;
+use Slim\Exception\HttpNotFoundException;
 
 class CustomErrorRenderer implements ErrorRendererInterface
 {
@@ -18,6 +19,10 @@ class CustomErrorRenderer implements ErrorRendererInterface
 
     public function __invoke(Throwable $exception, bool $displayErrorDetails): string
     {
+        if ($exception instanceof HttpNotFoundException) {
+            return $this->container->get("view")->fetch("404.html");
+        }
+
         if ($displayErrorDetails) {
             return $this->renderDefaultErrorHtml($exception, $displayErrorDetails);
         }
