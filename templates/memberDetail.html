@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8">
+        <title>会員詳細情報</title>
+    </head>
+    <body>
+        <header>
+            <h1>会員詳細情報</h1>
+        </header>
+        <section>
+            {% if msg %}
+            <p>{{ msg }}</p>
+            {% else %}
+            <dl>
+                <dt>会員ID</dt>
+                <dd>{{ memberInfo.id }}</dd>
+                <dt>氏名</dt>
+                <dd>{{ memberInfo.mbNameFull }}</dd>
+                <dt>生年月日</dt>
+                <dd>{{ memberInfo.mbBirthStr }}</dd>
+                <dt>会員種別</dt>
+                <dd>{{ memberInfo.mbTypeStr }}</dd>
+            </dl>
+            {% endif %}
+        </section>
+    </body>
+</html>
