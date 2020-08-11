@@ -79,5 +79,42 @@ class MemberController
         $response->getBody()->write($content);
         return $response;
     }
+
+    public function showMemberDetail(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        $memberId = $args['id'];
+        $sqlSelect = 'SELECT * FROM members WHERE id = :id';
+
+        try {
+            $db = $this->db();
+            $stmt = $db->prepare($sqlSelect);
+            $stmt->bindValue(':id', $memberId, PDO::PARAM_INT);
+            $result = $stmt->execute();
+            if ($result) { // SELECT成功
+                if ($row = $stmt->fetch()) {
+                    $id = $row['id'];
+                    $mbNameLast = $row['mb_name_last'];
+                    $mbNameFirst = $row['mb_name_first'];
+                    $mbBirth = $row['mb_birth'];
+                    $mbType = $row['mb_type'];
+
+                    $content = 'ID: ' . $id . '<br>氏名: ' . \htmlspecialchars($mbNameLast) . \htmlspecialchars($mbNameFirst) . 
+                        '<br>生年月日: ' . $mbBirth . '<br>会員種別: ' . $mbType;
+                } else {
+                    $content = '指定された会員情報は存在しません';
+                }
+            } else {
+                $content = 'データ取得に失敗しました';
+            }
+        } catch (PDOException $ex) {
+            $content = '障害が発生しました。';
+            var_dump($ex);
+        } finally {
+            $db = null; // DB切断
+        }
+
+        $response->getBody()->write($content);
+        return $response;
+    }
 }
 
