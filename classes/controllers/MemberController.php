@@ -22,6 +22,11 @@ class MemberController
         return $this->container->get("view");
     }
 
+    function db(): PDO
+    {
+        return $this->container->get("db");
+    }
+
     public function goMemberAdd(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
         $response = $this->twig()->render($response, "memberAdd.html");
@@ -45,12 +50,7 @@ class MemberController
         $sqlInsert = "INSERT INTO members (mb_name_last, mb_name_first, mb_birth, mb_type) VALUES (:mb_name_last, :mb_name_first, :mb_birth, :mb_type)";
 
         try {
-            // PDOオブジェクトの生成 = データベース接続
-            $db = new PDO($dbUrl, $dbUsername, $dbPassword);
-            // PDOのエラー表示モードを例外モードに
-            $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            // prepared statementを有効に
-            $db->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
+            $db = $this->db();
 
             // プリペアードステートメントのインスタンスを取得して、変数を束縛
             $stmt = $db->prepare($sqlInsert);
