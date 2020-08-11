@@ -54,4 +54,21 @@ class MemberDAO
         }
         return $membersList; 
     }
+
+    public function insert(Member $member): int
+    {
+        $sqlInsert = "INSERT INTO members (mb_name_last, mb_name_first, mb_birth, mb_type) VALUES (:mb_name_last, :mb_name_first, :mb_birth, :mb_type)";
+        $stmt = $this->db->prepare($sqlInsert);
+        $stmt->bindValue(':mb_name_last', $member->getMbNameLast(), PDO::PARAM_STR);
+        $stmt->bindValue(':mb_name_first', $member->getMbNameFirst(), PDO::PARAM_STR);
+        if (empty($member->getMbBirth())) {
+            $stmt->bindValue(':mb_birth', null, PDO::PARAM_NULL);
+        } else {
+            $stmt->bindValue(':mb_birth', $member->getMbBirth(), PDO::PARAM_STR);
+        }
+        $stmt->bindValue(':mb_type', $member->getMbType(), PDO::PARAM_INT);
+        $result = $stmt->execute();
+
+        return ($result ? $this->db->lastInsertId() : -1);
+    }
 }

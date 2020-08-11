@@ -47,27 +47,17 @@ class MemberController
         $addMbNameLast = \trim($addMbNameLast);
         $addMbNameFirst = \trim($addMbNameFirst);
 
-        global $dbUrl, $dbUsername, $dbPassword;
-
-        // 登録用SQL
-        $sqlInsert = "INSERT INTO members (mb_name_last, mb_name_first, mb_birth, mb_type) VALUES (:mb_name_last, :mb_name_first, :mb_birth, :mb_type)";
+        $member = new Member();
+        $member->setMbNameLast($addMbNameLast);
+        $member->setMbNameFirst($addMbNameFirst);
+        $member->setMbBirth($addMbBirth);
+        $member->setMbType($addMbType);
 
         try {
             $db = $this->db();
-
-            // プリペアードステートメントのインスタンスを取得して、変数を束縛
-            $stmt = $db->prepare($sqlInsert);
-            $stmt->bindValue(':mb_name_last', $addMbNameLast, PDO::PARAM_STR);
-            $stmt->bindValue(':mb_name_first', $addMbNameFirst, PDO::PARAM_STR);
-            $stmt->bindValue(':mb_birth', $addMbBirth, PDO::PARAM_STR);
-            $stmt->bindValue(':mb_type', $addMbType, PDO::PARAM_INT);
-
-            // SQL実行
-            $result = $stmt->execute();
-
-            if ($result) {
-                // SQL成功
-                $mbId = $db->lastInsertId();
+            $dao = new MemberDAO($db);
+            $mbId = $dao->insert($member);
+            if ($mbId != -1) {
                 $content = 'ID ' . $mbId . 'で登録が完了しました。';
             } else {
                 $content = '登録に失敗しました。';
