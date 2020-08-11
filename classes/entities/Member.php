@@ -3,6 +3,12 @@ namespace SocymSlim\MVC\entities;
 
 class Member
 {
+    public static $MB_TYPE_NAMES = [
+        1 => '一般会員',
+        2 => '優良会員',
+        3 => '特別会員'
+    ];
+    
     private $id;
     private $mbNameLast;
     private $mbNameFirst;
@@ -57,5 +63,15 @@ class Member
     public function setMbType(?int $mbType): void
     {
         $this->mbType = $mbType;
+    }
+
+    // 会員種別を文字列で返す。
+    public function getMbTypeStr(): string
+    {
+        if (isset(self::$MB_TYPE_NAMES[$this->mbType])) {
+            return self::$MB_TYPE_NAMES[$this->mbType];
+        } else {
+            return '';
+        }
     }
 }
