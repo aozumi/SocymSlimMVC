@@ -55,6 +55,15 @@ class MemberDAO
         return $membersList; 
     }
 
+    // 会員情報を全件取得し、カラム名の連想配列の配列で返す (Memberの配列ではなく)
+    public function findAll2Array(): array
+    {
+        $sqlSelect = 'SELECT * FROM members';
+        $stmt = $this->db->prepare($sqlSelect);
+        $result = $stmt->execute();
+        return ($result ? $stmt->fetchAll() : []);
+    }
+
     public function insert(Member $member): int
     {
         $sqlInsert = "INSERT INTO members (mb_name_last, mb_name_first, mb_birth, mb_type) VALUES (:mb_name_last, :mb_name_first, :mb_birth, :mb_type)";

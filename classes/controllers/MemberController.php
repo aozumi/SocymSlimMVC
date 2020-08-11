@@ -105,11 +105,11 @@ class MemberController
 
         try {
             $db = $this->db();
-            $stmt = $db->prepare($sqlSelect);
-            $result = $stmt->execute();
-            if ($result) {
+            $dao = new MemberDAO($db);
+            $membersList = $dao->findAll2Array();
+            if (! empty($membersList)) {
                 $jsonArray = [
-                    'members' => $stmt->fetchAll(),
+                    'members' => $membersList,
                     'msg' => 'データ取得に成功しました'
                 ];
             } else {
