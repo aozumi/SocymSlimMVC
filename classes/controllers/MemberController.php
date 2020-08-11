@@ -9,6 +9,7 @@ use PDO;
 use PDOException;
 
 use SocymSlim\MVC\entities\Member;
+use SocymSlim\MVC\daos\MemberDAO;
 
 class MemberController
 {
@@ -96,27 +97,22 @@ class MemberController
     {
         $templateParams = [];  // テンプレートに渡すパラメータ
         $memberId = $args['id'];
-        $sqlSelect = 'SELECT * FROM members WHERE id = :id';
 
         try {
             $db = $this->db();
-            $stmt = $db->prepare($sqlSelect);
-            $stmt->bindValue(':id', $memberId, PDO::PARAM_INT);
-            $result = $stmt->execute();
-            if ($result) { // SELECT成功
-                if ($row = $stmt->fetch()) {
-                    $templateParams['memberInfo'] = $this->rowToMember($row);
-                } else {
-                    $templateParams['msg'] = '指定された会員情報は存在しません';
-                }
+            $dao = new MemberDAO($db);
+            $member = $dao->findByPK($memberId);
+            if (isset($member)) {
+                $templateParams['memberInfo'] = $member;
             } else {
-                $templateParams['msg'] = 'データ取得に失敗しました';
+                $templateParams['msg'] = '指定された会員情報は存在しません';
             }
         } catch (PDOException $ex) {
             $templateParams['msg'] = '障害が発生しました。';
             var_dump($ex);
         } finally {
             $db = null; // DB切断
+            $dao = null;
         }
 
         $response = $this->twig()->render($response, 'memberDetail.html', $templateParams);
