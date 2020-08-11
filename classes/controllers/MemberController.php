@@ -9,6 +9,7 @@ use PDO;
 use PDOException;
 
 use SocymSlim\MVC\entities\Member;
+use SocymSlim\MVC\daos\MemberDAO;
 
 class MemberController
 {
@@ -46,27 +47,16 @@ class MemberController
         $addMbNameLast = \trim($addMbNameLast);
         $addMbNameFirst = \trim($addMbNameFirst);
 
-        global $dbUrl, $dbUsername, $dbPassword;
-
-        // 登録用SQL
-        $sqlInsert = "INSERT INTO members (mb_name_last, mb_name_first, mb_birth, mb_type) VALUES (:mb_name_last, :mb_name_first, :mb_birth, :mb_type)";
+        $member = new Member();
+        $member->setMbNameLast($addMbNameLast);
+        $member->setMbNameFirst($addMbNameFirst);
+        $member->setMbBirth($addMbBirth);
+        $member->setMbType($addMbType);
 
         try {
-            $db = $this->db();
-
-            // プリペアードステートメントのインスタンスを取得して、変数を束縛
-            $stmt = $db->prepare($sqlInsert);
-            $stmt->bindValue(':mb_name_last', $addMbNameLast, PDO::PARAM_STR);
-            $stmt->bindValue(':mb_name_first', $addMbNameFirst, PDO::PARAM_STR);
-            $stmt->bindValue(':mb_birth', $addMbBirth, PDO::PARAM_STR);
-            $stmt->bindValue(':mb_type', $addMbType, PDO::PARAM_INT);
-
-            // SQL実行
-            $result = $stmt->execute();
-
-            if ($result) {
-                // SQL成功
-                $mbId = $db->lastInsertId();
+            $dao = new MemberDAO($this->db());
+            $mbId = $dao->insert($member);
+            if ($mbId != -1) {
                 $content = 'ID ' . $mbId . 'で登録が完了しました。';
             } else {
                 $content = '登録に失敗しました。';
@@ -75,48 +65,31 @@ class MemberController
             $content = '障害が発生しました。'; 
             var_dump($ex);
         } finally {
-            $db = null;  // データベース接続を切断
+            $dao = null;  // データベース接続を切断
         }
 
         $response->getBody()->write($content);
         return $response;
     }
 
-    private function rowToMember($row): Member {
-        $member = new Member();
-        $member->setId($row['id']);
-        $member->setMbNameLast($row['mb_name_last']);
-        $member->setMbNameFirst($row['mb_name_first']);
-        $member->setMbBirth($row['mb_birth']);
-        $member->setMbType($row['mb_type']);
-        return $member;
-    }
-
     public function showMemberDetail(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
         $templateParams = [];  // テンプレートに渡すパラメータ
         $memberId = $args['id'];
-        $sqlSelect = 'SELECT * FROM members WHERE id = :id';
 
         try {
-            $db = $this->db();
-            $stmt = $db->prepare($sqlSelect);
-            $stmt->bindValue(':id', $memberId, PDO::PARAM_INT);
-            $result = $stmt->execute();
-            if ($result) { // SELECT成功
-                if ($row = $stmt->fetch()) {
-                    $templateParams['memberInfo'] = $this->rowToMember($row);
-                } else {
-                    $templateParams['msg'] = '指定された会員情報は存在しません';
-                }
+            $dao = new MemberDAO($this->db());
+            $member = $dao->findByPK($memberId);
+            if (isset($member)) {
+                $templateParams['memberInfo'] = $member;
             } else {
-                $templateParams['msg'] = 'データ取得に失敗しました';
+                $templateParams['msg'] = '指定された会員情報は存在しません';
             }
         } catch (PDOException $ex) {
             $templateParams['msg'] = '障害が発生しました。';
             var_dump($ex);
         } finally {
-            $db = null; // DB切断
+            $dao = null;    // DB切断
         }
 
         $response = $this->twig()->render($response, 'memberDetail.html', $templateParams);
@@ -128,12 +101,11 @@ class MemberController
         $sqlSelect = 'SELECT * FROM members';
 
         try {
-            $db = $this->db();
-            $stmt = $db->prepare($sqlSelect);
-            $result = $stmt->execute();
-            if ($result) {
+            $dao = new MemberDAO($this->db());
+            $membersList = $dao->findAll2Array();
+            if (! empty($membersList)) {
                 $jsonArray = [
-                    'members' => $stmt->fetchAll(),
+                    'members' => $membersList,
                     'msg' => 'データ取得に成功しました'
                 ];
             } else {
@@ -143,7 +115,7 @@ class MemberController
             $jsonArray = ['msg' => '障害が発生しました'];
             var_dump($ex);
         } finally {
-            $db = null;
+            $dao = null;
         }
 
         $response->getBody()->write(\json_encode($jsonArray));
@@ -153,27 +125,16 @@ class MemberController
 
     public function showMembersList(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
-        $sqlSelect = 'SELECT * FROM members ORDER BY id';
         $templateParams = [];
         $membersList = [];
 
         try {
-            $db = $this->db();
-            $stmt = $db->prepare($sqlSelect);
-            $result = $stmt->execute();
-
-            if ($result) {
-                while ($row = $stmt->fetch()) {
-                    $member = $this->rowToMember($row);
-                    $membersList[$member->getId()] = $member;
-                }
-            } else {
-                $templateParams['msg'] = 'データ取得に失敗しました';
-            }
+            $dao = new MemberDAO($this->db());
+            $membersList = $dao->findAll();
         } catch (PDOException $ex) {
             $templateParams['msg'] = '障害が発生しました';
         } finally {
-            $db = null;
+            $dao = null;
         }
         $templateParams['membersList'] = $membersList;
 
