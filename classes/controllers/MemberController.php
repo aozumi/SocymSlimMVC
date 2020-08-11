@@ -54,8 +54,7 @@ class MemberController
         $member->setMbType($addMbType);
 
         try {
-            $db = $this->db();
-            $dao = new MemberDAO($db);
+            $dao = new MemberDAO($this->db());
             $mbId = $dao->insert($member);
             if ($mbId != -1) {
                 $content = 'ID ' . $mbId . 'で登録が完了しました。';
@@ -66,7 +65,7 @@ class MemberController
             $content = '障害が発生しました。'; 
             var_dump($ex);
         } finally {
-            $db = null;  // データベース接続を切断
+            $dao = null;  // データベース接続を切断
         }
 
         $response->getBody()->write($content);
@@ -79,8 +78,7 @@ class MemberController
         $memberId = $args['id'];
 
         try {
-            $db = $this->db();
-            $dao = new MemberDAO($db);
+            $dao = new MemberDAO($this->db());
             $member = $dao->findByPK($memberId);
             if (isset($member)) {
                 $templateParams['memberInfo'] = $member;
@@ -91,8 +89,7 @@ class MemberController
             $templateParams['msg'] = '障害が発生しました。';
             var_dump($ex);
         } finally {
-            $db = null; // DB切断
-            $dao = null;
+            $dao = null;    // DB切断
         }
 
         $response = $this->twig()->render($response, 'memberDetail.html', $templateParams);
@@ -104,8 +101,7 @@ class MemberController
         $sqlSelect = 'SELECT * FROM members';
 
         try {
-            $db = $this->db();
-            $dao = new MemberDAO($db);
+            $dao = new MemberDAO($this->db());
             $membersList = $dao->findAll2Array();
             if (! empty($membersList)) {
                 $jsonArray = [
@@ -119,7 +115,7 @@ class MemberController
             $jsonArray = ['msg' => '障害が発生しました'];
             var_dump($ex);
         } finally {
-            $db = null;
+            $dao = null;
         }
 
         $response->getBody()->write(\json_encode($jsonArray));
@@ -133,13 +129,12 @@ class MemberController
         $membersList = [];
 
         try {
-            $db = $this->db();
-            $dao = new MemberDAO($db);
+            $dao = new MemberDAO($this->db());
             $membersList = $dao->findAll();
         } catch (PDOException $ex) {
             $templateParams['msg'] = '障害が発生しました';
         } finally {
-            $db = null;
+            $dao = null;
         }
         $templateParams['membersList'] = $membersList;
 
