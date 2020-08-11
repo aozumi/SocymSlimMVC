@@ -82,6 +82,16 @@ class MemberController
         return $response;
     }
 
+    private function rowToMember($row): Member {
+        $member = new Member();
+        $member->setId($row['id']);
+        $member->setMbNameLast($row['mb_name_last']);
+        $member->setMbNameFirst($row['mb_name_first']);
+        $member->setMbBirth($row['mb_birth']);
+        $member->setMbType($row['mb_type']);
+        return $member;
+    }
+
     public function showMemberDetail(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
         $templateParams = [];  // テンプレートに渡すパラメータ
@@ -95,13 +105,7 @@ class MemberController
             $result = $stmt->execute();
             if ($result) { // SELECT成功
                 if ($row = $stmt->fetch()) {
-                    $member = new Member();
-                    $member->setId($row['id']);
-                    $member->setMbNameLast($row['mb_name_last']);
-                    $member->setMbNameFirst($row['mb_name_first']);
-                    $member->setMbBirth($row['mb_birth']);
-                    $member->setMbType($row['mb_type']);
-                    $templateParams['memberInfo'] = $member;
+                    $templateParams['memberInfo'] = $this->rowToMember($row);
                 } else {
                     $templateParams['msg'] = '指定された会員情報は存在しません';
                 }
@@ -144,6 +148,36 @@ class MemberController
 
         $response->getBody()->write(\json_encode($jsonArray));
         $response = $response->withHeader('Content-Type', 'application/json');
+        return $response;
+    }
+
+    public function showMembersList(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
+    {
+        $sqlSelect = 'SELECT * FROM members ORDER BY id';
+        $templateParams = [];
+        $membersList = [];
+
+        try {
+            $db = $this->db();
+            $stmt = $db->prepare($sqlSelect);
+            $result = $stmt->execute();
+
+            if ($result) {
+                while ($row = $stmt->fetch()) {
+                    $member = $this->rowToMember($row);
+                    $membersList[$member->getId()] = $member;
+                }
+            } else {
+                $templateParams['msg'] = 'データ取得に失敗しました';
+            }
+        } catch (PDOException $ex) {
+            $templateParams['msg'] = '障害が発生しました';
+        } finally {
+            $db = null;
+        }
+        $templateParams['membersList'] = $membersList;
+
+        $response = $this->twig()->render($response, 'membersList.html', $templateParams);
         return $response;
     }
 }
