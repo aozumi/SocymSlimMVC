@@ -83,4 +83,10 @@ class Member
         }
         return date('Y年n月j日', strtotime($this->mbBirth));
     }
+
+    // フルネームを返す。苗字と名前の間は空白を空ける。
+    public function getMbNameFull(): string
+    {
+        return $this->mbNameLast . ' ' . $this->mbNameFirst;
+    }
 }
