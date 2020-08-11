@@ -74,4 +74,13 @@ class Member
             return '';
         }
     }
+
+    // 生年月日を「*年*月*日」形式の文字列で返す。
+    public function getMbBirthStr(): string
+    {
+        if (empty($this->mbBirth)) {
+            return '';
+        }
+        return date('Y年n月j日', strtotime($this->mbBirth));
+    }
 }
