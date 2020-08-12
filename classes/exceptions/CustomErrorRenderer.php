@@ -27,8 +27,13 @@ class CustomErrorRenderer implements ErrorRendererInterface
             return $this->renderDefaultErrorHtml($exception, $displayErrorDetails);
         }
 
+        $msg = '';
+        if ($exception instanceof DataAccessException) {
+            $msg = $exception->getMessage();
+        }
+
         $twig = $this->container->get("view");
-        $msg = 'もう一度始めから操作してください。';
+        $msg .= 'もう一度始めから操作してください。';
         $html = $twig->fetch("error.html", ["errorMsg" => $msg]);
         return $html;
     }
