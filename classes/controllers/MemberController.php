@@ -10,6 +10,7 @@ use PDOException;
 
 use SocymSlim\MVC\entities\Member;
 use SocymSlim\MVC\daos\MemberDAO;
+use SocymSlim\MVC\exceptions\DataAccessException;
 
 class MemberController
 {
@@ -62,11 +63,10 @@ class MemberController
                 $content = 'ID ' . $mbId . 'で登録が完了しました。';
                 $redirect = true;
             } else {
-                $content = '登録に失敗しました。';
+                throw new DataAccessException('登録に失敗しました。');
             }
         } catch (PDOException $ex) {
-            $content = '障害が発生しました。'; 
-            var_dump($ex);
+            throw new DataAccessException('データベース処理中に障害が発生しました', $ex->getCode(), $ex);
         } finally {
             $dao = null;  // データベース接続を切断
         }
@@ -75,6 +75,7 @@ class MemberController
             return ($response->withHeader('Location', '/showMembersList')
                 ->withStatus(302));
         } else {
+            // バリデーション失敗など
             $response->getBody()->write($content);
             return $response;
         }
