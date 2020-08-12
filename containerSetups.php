@@ -15,10 +15,13 @@ $container->set("view",
 
 $container->set("db",
     function () {
-        global $dbUrl, $dbUsername, $dbPassword;
-
         // PDOオブジェクトの生成 = データベース接続
-        $db = new PDO($dbUrl, $dbUsername, $dbPassword);
+        if (isset($_ENV['DATABASE_URL'])) {
+            $db = makePdoByEnv($_ENV['DATABASE_URL']);
+        } else {
+            global $dbUrl, $dbUsername, $dbPassword;
+            $db = new PDO($dbUrl, $dbUsername, $dbPassword);
+        }
         // PDOのエラー表示モードを例外モードに
         $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         // prepared statementを有効に
@@ -30,3 +33,17 @@ $container->set("db",
     });
 
 AppFactory::setContainer($container);
+
+function makePdoByEnv(string $uri): PDO
+{
+    $parsed = parse_url($uri);
+
+    $host = $parsed['host'];
+    $port = $parsed['port'];
+    $user = $parsed['user'];
+    $password = $parsed['pass'];
+    $dbname = ltrim($parsed['path'], '/');
+
+    $dns = "pgsql:dbname=" . $dbname . ";host=" . $host . ";port=" . $port;
+    return new PDO($dns, $user, $password);
+}
