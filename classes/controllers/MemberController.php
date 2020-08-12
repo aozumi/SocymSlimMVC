@@ -10,6 +10,7 @@ use PDOException;
 
 use SocymSlim\MVC\entities\Member;
 use SocymSlim\MVC\daos\MemberDAO;
+use SocymSlim\MVC\exceptions\DataAccessException;
 
 class MemberController
 {
@@ -62,11 +63,10 @@ class MemberController
                 $content = 'ID ' . $mbId . 'で登録が完了しました。';
                 $redirect = true;
             } else {
-                $content = '登録に失敗しました。';
+                throw new DataAccessException('登録に失敗しました。');
             }
         } catch (PDOException $ex) {
-            $content = '障害が発生しました。'; 
-            var_dump($ex);
+            throw new DataAccessException('データベース処理中に障害が発生しました', $ex->getCode(), $ex);
         } finally {
             $dao = null;  // データベース接続を切断
         }
@@ -75,6 +75,7 @@ class MemberController
             return ($response->withHeader('Location', '/showMembersList')
                 ->withStatus(302));
         } else {
+            // バリデーション失敗など
             $response->getBody()->write($content);
             return $response;
         }
@@ -94,18 +95,13 @@ class MemberController
                 $templateParams['msg'] = '指定された会員情報は存在しません';
             }
         } catch (PDOException $ex) {
-            return $this->showError($response, 'データベース処理に失敗しました。もう一度始めからやり直してください。');
+            throw new DataAccessException('データベース処理中に障害が発生しました。', $ex->getCode(), $ex);
         } finally {
             $dao = null;    // DB切断
         }
 
         $response = $this->twig()->render($response, 'memberDetail.html', $templateParams);
         return $response;
-    }
-
-    public function showError(ResponseInterface $response, string $message): ResponseInterface
-    {
-        return $this->twig()->render($response, "error.html", ['errorMsg' => $message]);
     }
 
     public function getAllMembersJSON(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
@@ -144,7 +140,7 @@ class MemberController
             $dao = new MemberDAO($this->db());
             $membersList = $dao->findAll();
         } catch (PDOException $ex) {
-            $templateParams['msg'] = '障害が発生しました';
+            throw new DataAccessException('データベース処理中に障害が発生しました', $ex->getCode(), $ex);
         } finally {
             $dao = null;
         }
