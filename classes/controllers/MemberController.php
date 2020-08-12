@@ -94,14 +94,18 @@ class MemberController
                 $templateParams['msg'] = '指定された会員情報は存在しません';
             }
         } catch (PDOException $ex) {
-            $templateParams['msg'] = '障害が発生しました。';
-            var_dump($ex);
+            return $this->showError($response, 'データベース処理に失敗しました。もう一度始めからやり直してください。');
         } finally {
             $dao = null;    // DB切断
         }
 
         $response = $this->twig()->render($response, 'memberDetail.html', $templateParams);
         return $response;
+    }
+
+    public function showError(ResponseInterface $response, string $message): ResponseInterface
+    {
+        return $this->twig()->render($response, "error.html", ['errorMsg' => $message]);
     }
 
     public function getAllMembersJSON(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
