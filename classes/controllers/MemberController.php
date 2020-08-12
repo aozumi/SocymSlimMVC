@@ -95,18 +95,13 @@ class MemberController
                 $templateParams['msg'] = '指定された会員情報は存在しません';
             }
         } catch (PDOException $ex) {
-            return $this->showError($response, 'データベース処理に失敗しました。もう一度始めからやり直してください。');
+            throw new DataAccessException('データベース処理中に障害が発生しました。', $ex->getCode(), $ex);
         } finally {
             $dao = null;    // DB切断
         }
 
         $response = $this->twig()->render($response, 'memberDetail.html', $templateParams);
         return $response;
-    }
-
-    public function showError(ResponseInterface $response, string $message): ResponseInterface
-    {
-        return $this->twig()->render($response, "error.html", ['errorMsg' => $message]);
     }
 
     public function getAllMembersJSON(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
@@ -145,7 +140,7 @@ class MemberController
             $dao = new MemberDAO($this->db());
             $membersList = $dao->findAll();
         } catch (PDOException $ex) {
-            $templateParams['msg'] = '障害が発生しました';
+            throw new DataAccessException('データベース処理中に障害が発生しました', $ex->getCode(), $ex);
         } finally {
             $dao = null;
         }
