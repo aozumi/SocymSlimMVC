@@ -53,11 +53,14 @@ class MemberController
         $member->setMbBirth($addMbBirth);
         $member->setMbType($addMbType);
 
+        $redirect = false;  // 応答でリダイレクトするかのフラグ
+
         try {
             $dao = new MemberDAO($this->db());
             $mbId = $dao->insert($member);
             if ($mbId != -1) {
                 $content = 'ID ' . $mbId . 'で登録が完了しました。';
+                $redirect = true;
             } else {
                 $content = '登録に失敗しました。';
             }
@@ -68,8 +71,13 @@ class MemberController
             $dao = null;  // データベース接続を切断
         }
 
-        $response->getBody()->write($content);
-        return $response;
+        if ($redirect) {
+            return ($response->withHeader('Location', '/showMembersList')
+                ->withStatus(302));
+        } else {
+            $response->getBody()->write($content);
+            return $response;
+        }
     }
 
     public function showMemberDetail(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
